@@ -28,7 +28,6 @@ public class PatientMapper {
                 .email(dto.getEmail())
                 .address(dto.getAddress())
                 .dateOfBirth(LocalDate.parse(dto.getDateOfBirth()))
-                .registeredDate(LocalDate.parse(dto.getRegisteredDate()))
                 .build();
     }
 }

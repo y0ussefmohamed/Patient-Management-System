@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface PatientRepository extends JpaRepository<Patient, UUID> {
     boolean existsByEmail(String email);
 
-    // To validate if another user entered this email before
+    // if this query returned a user this means that this email exists and not related to your id
     boolean existsByEmailAndIdNot(String email, UUID id);
 }

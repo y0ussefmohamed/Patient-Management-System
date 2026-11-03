@@ -32,5 +32,13 @@ public class Patient {
     private LocalDate dateOfBirth;
 
     @NotNull
+    @Column(nullable = false, updatable = false)
     private LocalDate registeredDate;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.registeredDate == null) {
+            this.registeredDate = LocalDate.now();
+        }
+    }
 }
