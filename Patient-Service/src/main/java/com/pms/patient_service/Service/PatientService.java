@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import com.pms.patient_service.grpc.BillingServiceGrpcClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class PatientService {
     private final PatientRepository patientRepository;
+    private final BillingServiceGrpcClient billingServiceClient;
 
     @Autowired
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository, BillingServiceGrpcClient billingServiceClient) {
         this.patientRepository = patientRepository;
+        this.billingServiceClient = billingServiceClient;
     }
 
     public List<PatientResponseDTO> getPatients() {
@@ -37,8 +40,12 @@ public class PatientService {
         if (patientRepository.existsByEmail(requestDTO.getEmail()))
             throw new EmailAlreadyExistsException("A patient with this email already exists: " + requestDTO.getEmail());
 
-        Patient patientEntity = PatientMapper.toEntity(requestDTO);
-        Patient savedPatient = patientRepository.save(patientEntity);
+        Patient savedPatient = patientRepository.save(PatientMapper.toEntity(requestDTO));
+        billingServiceClient.createBillingAccount(
+                String.valueOf(savedPatient.getId()),
+                savedPatient.getName(),
+                savedPatient.getEmail()
+        );
 
         return PatientMapper.toResponseDTO(savedPatient);
     }

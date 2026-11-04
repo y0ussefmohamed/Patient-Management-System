@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// Generate a separate Java file for each message
+option java_multiple_files = true;
+
+// Package for the generated billing messages and client stub
+option java_package = "billing";
+
+// Contract the patient service uses to call the billing service
+service BillingService {
+  // Called by the patient service to create a billing account
+  rpc CreateBillingAccount (BillingRequest) returns (BillingResponse);
+}
+
+// Patient details sent to the billing service
+message BillingRequest {
+  string patientId = 1; // Field number used by Protobuf
+  string name = 2;
+  string email = 3;
+}
+
+// Billing account details returned to the patient service
+message BillingResponse {
+  string accountId = 1;
+  string status = 2;
+}

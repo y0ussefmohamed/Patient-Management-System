@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+// Generate separate .java files for each message/service instead of one giant file
+option java_multiple_files = true;
+
+// The Java package where generated classes (DTOs, client, server) will live
+option java_package = "billing";
+
+// Interface contract defining remote operations
+service BillingService {
+  // Remote Procedure Call: a method callable over the network
+  rpc CreateBillingAccount (BillingRequest) returns (BillingResponse);
+}
+
+// Data carrier (similar to a Java Record / DTO)
+message BillingRequest {
+  string patientId = 1; // Binary tag ID (not a default value) sent over the wire
+  string name = 2;
+  string email = 3;
+}
+
+message BillingResponse {
+  string accountId = 1;
+  string status = 2;
+}

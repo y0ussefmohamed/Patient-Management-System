@@ -1,0 +1,55 @@
+services:
+  patient-service-db:
+    image: postgres:17
+    container_name: patient-service-db
+    environment:
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: patient_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ${HOME}/db_volumes/patient-service-db:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d patient_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  billing-service:
+    build:
+      context: ./Billing-Service
+      dockerfile: Dockerfile
+    container_name: billing-service
+    ports:
+      - "8081:8081"
+      - "9001:9001"
+    networks:
+      - internal
+
+  patient-service:
+    build:
+      context: ./Patient-Service
+      dockerfile: Dockerfile
+    container_name: patient-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://patient-service-db:5432/patient_db
+      SPRING_DATASOURCE_USERNAME: admin_user
+      SPRING_DATASOURCE_PASSWORD: password
+      BILLING_SERVICE_ADDRESS: billing-service
+      BILLING_SERVICE_GRPC_PORT: 9001
+    depends_on:
+      patient-service-db:
+        condition: service_healthy
+      billing-service:
+        condition: service_started
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

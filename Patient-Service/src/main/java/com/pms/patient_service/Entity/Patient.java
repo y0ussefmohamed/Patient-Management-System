@@ -31,8 +31,7 @@ public class Patient {
     @NotNull
     private LocalDate dateOfBirth;
 
-    @NotNull
-    @Column(nullable = false, updatable = false)
+    @NotNull @Column(nullable = false, updatable = false)
     private LocalDate registeredDate;
 
     @PrePersist
