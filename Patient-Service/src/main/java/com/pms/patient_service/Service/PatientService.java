@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.pms.patient_service.grpc.BillingServiceGrpcClient;
+import com.pms.patient_service.kafka.KafkaProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,15 @@ import org.springframework.stereotype.Service;
 public class PatientService {
     private final PatientRepository patientRepository;
     private final BillingServiceGrpcClient billingServiceClient;
+    private final KafkaProducer kafkaProducer;
 
     @Autowired
-    public PatientService(PatientRepository patientRepository, BillingServiceGrpcClient billingServiceClient) {
+    public PatientService(PatientRepository patientRepository,
+                          BillingServiceGrpcClient billingServiceClient,
+                          KafkaProducer kafkaProducer) {
         this.patientRepository = patientRepository;
         this.billingServiceClient = billingServiceClient;
+        this.kafkaProducer = kafkaProducer;
     }
 
     public List<PatientResponseDTO> getPatients() {
@@ -46,6 +51,8 @@ public class PatientService {
                 savedPatient.getName(),
                 savedPatient.getEmail()
         );
+
+        kafkaProducer.sendEvent(savedPatient);
 
         return PatientMapper.toResponseDTO(savedPatient);
     }
