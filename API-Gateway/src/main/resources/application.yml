@@ -1,0 +1,30 @@
+server:
+  # Clients call the gateway on this port.
+  port: 8084
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Example: localhost:8084/api/patients -> patient-service:8080/patients
+        - id: patient-service-route
+          # Patient Service's address inside the shared Docker network.
+          uri: http://patient-service:8080
+          predicates:
+            # Match /api/patients and its subpaths, such as /api/patients/{id}.
+            - Path=/api/patients/**
+          filters:
+            # Remove the first path segment (/api), leaving /patients or /patients/{id}.
+            - StripPrefix=1
+
+        # Example: localhost:8084/api-docs/patients -> patient-service:8080/v3/api-docs
+        - id: api-docs-patient-route
+          uri: http://patient-service:8080
+          predicates:
+            # Match the documentation path requested by the client.
+            - Path=/api-docs/patients
+          filters:
+            # Replace that path with Patient Service's actual OpenAPI endpoint.
+            - RewritePath=/api-docs/patients,/v3/api-docs
