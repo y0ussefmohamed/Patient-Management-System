@@ -18,6 +18,7 @@ spring:
           filters:
             # Remove the first path segment (/api), leaving /patients or /patients/{id}.
             - StripPrefix=1
+            - JwtValidation # Check the JWT with Auth Service for each matching request; forward only if valid.
 
         # Example: localhost:8084/api-docs/patients -> patient-service:8080/v3/api-docs
         - id: api-docs-patient-route
@@ -28,3 +29,17 @@ spring:
           filters:
             # Replace that path with Patient Service's actual OpenAPI endpoint.
             - RewritePath=/api-docs/patients,/v3/api-docs
+
+        - id: auth-service-route
+          uri: http://auth-service:8083
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: api-docs-auth-route
+          uri: http://auth-service:8083
+          predicates:
+            - Path=/api-docs/auth
+          filters:
+            - RewritePath=/api-docs/auth,/v3/api-docs

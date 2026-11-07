@@ -1,0 +1,1 @@
+select * from auth_db.information_schema.sql_features

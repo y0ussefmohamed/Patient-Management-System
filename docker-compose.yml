@@ -18,6 +18,25 @@ services:
       timeout: 5s
       retries: 5
 
+  auth-service-db:
+    image: postgres:17
+    container_name: auth-service-db
+    environment:
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   kafka:
     image: apache/kafka:3.9.2
     container_name: kafka
@@ -123,6 +142,24 @@ services:
     networks:
       - internal
 
+  auth-service:
+    build:
+      context: ./Auth-Service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-service-db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: admin_user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_MODE: always
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      auth-service-db:
+        condition: service_healthy
+    networks:
+      - internal
+
   api-gateway:
     build:
       context: ./API-Gateway
@@ -130,6 +167,8 @@ services:
     container_name: api-gateway
     ports:
       - "8084:8084"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8083
     depends_on:
       patient-service:
         condition: service_started
@@ -137,6 +176,7 @@ services:
       - internal
 
 volumes:
+  auth-db-data:
   kafka-data:
 
 networks:
