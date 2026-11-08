@@ -17,7 +17,7 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
         byte[] keyBytes = Base64.getDecoder().decode(secret);
-        this.secretKey = Keys.hmacShaKeyFor(keyBytes); // Header Algorithm
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes); // Header's Algorithm
     }
 
     public String generateToken(String email, String role) {

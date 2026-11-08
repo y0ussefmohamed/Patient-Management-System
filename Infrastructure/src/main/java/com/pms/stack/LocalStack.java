@@ -53,47 +53,36 @@ public class LocalStack extends Stack {
         CfnCluster mskCluster = createMskCluster();
         this.ecsCluster = createEcsCluster();
 
-        // CloudFormation requires an explicit input for the JWT secret, like ${JWT_SECRET} in Docker Compose.
-        // Our deployment command will supply the existing secret; this block does not generate a key.
+        // 1. Declare an input slot for JWT_SECRET (like ${JWT_SECRET} in docker-compose.yml)
         CfnParameter jwtSecret = CfnParameter.Builder.create(this, "JwtSecret")
                 .type("String")
                 .noEcho(true)
                 .description("JWT signing secret for Auth Service")
                 .build();
 
+        // 2. Auth-Service (port 8083, uses auth_db + JWT_SECRET)
         FargateService authService = createFargateService(
-                "AuthService",
-                "auth-service",
-                List.of(8083),
-                authServiceDb,
-                "auth_db",
+                "AuthService", "auth-service", List.of(8083),
+                authServiceDb, "auth_db",
                 Map.of("JWT_SECRET", jwtSecret.getValueAsString()));
         authService.getNode().addDependency(authDbHealthCheck);
         authService.getNode().addDependency(authServiceDb);
 
+        // 3. Billing-Service (ports 8081 & 9001, no DB, no extra env vars)
         FargateService billingService = createFargateService(
-                "BillingService",
-                "billing-service",
-                List.of(8081, 9001),
-                null,
-                null,
-                null);
+                "BillingService", "billing-service", List.of(8081, 9001),
+                null, null, null);
 
+        // 4. Analytics-Service (port 8082, no DB, depends on Kafka)
         FargateService analyticsService = createFargateService(
-                "AnalyticsService",
-                "analytics-service",
-                List.of(8082),
-                null,
-                null,
-                null);
+                "AnalyticsService", "analytics-service", List.of(8082),
+                null, null, null);
         analyticsService.getNode().addDependency(mskCluster);
 
+        // 5. Patient-Service (port 8080, uses patient_db + Billing gRPC env vars)
         FargateService patientService = createFargateService(
-                "PatientService",
-                "patient-service",
-                List.of(8080),
-                patientServiceDb,
-                "patient_db",
+                "PatientService", "patient-service", List.of(8080),
+                patientServiceDb, "patient_db",
                 Map.of(
                         "BILLING_SERVICE_ADDRESS", "host.docker.internal",
                         "BILLING_SERVICE_GRPC_PORT", "9001"));
@@ -179,6 +168,7 @@ public class LocalStack extends Stack {
                 .memoryLimitMiB(512)
                 .build();
 
+        // image, ports, logs, environment variables
         ContainerDefinitionOptions.Builder containerOptions = ContainerDefinitionOptions.builder()
                 .image(ContainerImage.fromRegistry(imageName))
                 .portMappings(ports.stream()
