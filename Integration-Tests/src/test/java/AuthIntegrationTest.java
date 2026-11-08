@@ -43,8 +43,8 @@ public class AuthIntegrationTest {
                 .contentType("application/json")
                 .body(loginDTO)
                 .when()
-                .post("/auth/login")
+                    .post("/auth/login")
                 .then()
-                .statusCode(401);
+                    .statusCode(401);
     }
 }

@@ -3,6 +3,7 @@ package com.pms.auth_service.Service;
 import com.pms.auth_service.DTO.LoginRequestDTO;
 import java.util.Optional;
 
+import com.pms.auth_service.Repository.UserRepository;
 import com.pms.auth_service.Util.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,19 +12,19 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Autowired
-    public AuthService(UserService userService, PasswordEncoder passwordEncoder,  JwtUtil jwtUtil) {
-        this.userService = userService;
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,  JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
 
     public Optional<String> authenticate(LoginRequestDTO loginRequestDTO) {
-        Optional<String> token = userService
+        Optional<String> token = userRepository
                 .findByEmail(loginRequestDTO.getEmail())
                 .filter(userEntity -> passwordEncoder.matches(
                         loginRequestDTO.getPassword(),

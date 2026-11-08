@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LocalStack extends Stack {
     private final Vpc vpc;
@@ -42,7 +43,9 @@ public class LocalStack extends Stack {
 
     public LocalStack(final App scope, final String id, final StackProps props) {
         super(scope, id, props);
+
         this.vpc = createVpc();
+        this.ecsCluster = createEcsCluster();
 
         DatabaseInstance authServiceDb = createDatabase("AuthServiceDB", "auth_db");
         DatabaseInstance patientServiceDb = createDatabase("PatientServiceDB", "patient_db");
@@ -51,7 +54,6 @@ public class LocalStack extends Stack {
         CfnHealthCheck patientDbHealthCheck = createDbHealthCheck(patientServiceDb, "PatientServiceDBHealthCheck");
 
         CfnCluster mskCluster = createMskCluster();
-        this.ecsCluster = createEcsCluster();
 
         // 1. Declare an input slot for JWT_SECRET (like ${JWT_SECRET} in docker-compose.yml)
         CfnParameter jwtSecret = CfnParameter.Builder.create(this, "JwtSecret")
@@ -213,7 +215,7 @@ public class LocalStack extends Stack {
         return FargateService.Builder.create(this, id)
                 .cluster(ecsCluster)
                 .taskDefinition(taskDefinition)
-                .assignPublicIp(false)
+                .assignPublicIp(false) // <-- Explicitly disables a public IP
                 .serviceName(imageName)
                 .build();
     }
@@ -230,7 +232,7 @@ public class LocalStack extends Stack {
                 .environment(Map.of(
                         "SPRING_PROFILES_ACTIVE", "prod",
                         "AUTH_SERVICE_URL", "http://host.docker.internal:8083"))
-                .portMappings(List.of(8084).stream()
+                .portMappings(Stream.of(8084)
                         .map(port -> PortMapping.builder()
                                 .containerPort(port)
                                 .hostPort(port)

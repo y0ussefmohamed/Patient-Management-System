@@ -28,31 +28,31 @@ public class PatientIntegrationTest {
                 .contentType("application/json")
                 .body(loginDTO)
                 .when()
-                .post("/auth/login")
+                    .post("/auth/login")
                 .then()
-                .statusCode(200)
-                .body("token", notNullValue())
-                .extract()
-                .jsonPath()
-                .getString("token");
+                    .statusCode(200)
+                    .body("token", notNullValue())
+                    .extract()
+                    .jsonPath()
+                    .getString("token");
 
         // Request patients using the JWT.
         given()
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get("/api/patients")
+                    .get("/api/patients")
                 .then()
-                .statusCode(200)
-                .body("$", instanceOf(List.class));
+                    .statusCode(200)
+                    .body("$", instanceOf(List.class));
     }
 
     @Test
     public void shouldReturnUnauthorizedWithoutToken() {
         given()
                 .when()
-                .get("/api/patients")
+                    .get("/api/patients")
                 .then()
-                .statusCode(401);
+                    .statusCode(401);
     }
 
     @Test
@@ -60,8 +60,8 @@ public class PatientIntegrationTest {
         given()
                 .header("Authorization", "Bearer invalid-token")
                 .when()
-                .get("/api/patients")
+                    .get("/api/patients")
                 .then()
-                .statusCode(401);
+                    .statusCode(401);
     }
 }
