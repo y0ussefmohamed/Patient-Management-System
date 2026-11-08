@@ -9,6 +9,8 @@ import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 @Service
 public class BillingServiceGrpcClient {
     private final BillingServiceBlockingStub blockingStub; // Proxy for BillingService
@@ -31,6 +33,7 @@ public class BillingServiceGrpcClient {
                 .setEmail(email)
                 .build();
 
-        return blockingStub.createBillingAccount(request);
+        return blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                .createBillingAccount(request);
     }
 }

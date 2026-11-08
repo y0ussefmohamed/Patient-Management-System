@@ -17,6 +17,7 @@ import com.pms.patient_service.kafka.KafkaProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PatientService {
@@ -41,11 +42,13 @@ public class PatientService {
                 .toList();
     }
 
+    // Roll back the patient if Billing or Kafka fails.
+    @Transactional
     public PatientResponseDTO createPatient(PatientRequestDTO requestDTO) {
         if (patientRepository.existsByEmail(requestDTO.getEmail()))
             throw new EmailAlreadyExistsException("A patient with this email already exists: " + requestDTO.getEmail());
 
-        Patient savedPatient = patientRepository.save(PatientMapper.toEntity(requestDTO));
+        Patient savedPatient = patientRepository.saveAndFlush(PatientMapper.toEntity(requestDTO));
         billingServiceClient.createBillingAccount(
                 String.valueOf(savedPatient.getId()),
                 savedPatient.getName(),

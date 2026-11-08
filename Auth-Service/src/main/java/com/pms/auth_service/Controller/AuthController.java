@@ -4,6 +4,7 @@ import com.pms.auth_service.DTO.LoginRequestDTO;
 import com.pms.auth_service.DTO.LoginResponseDTO;
 import com.pms.auth_service.Service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class AuthController {
 
     @Operation(summary = "Generate token on user login")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
         Optional<String> token = authService.authenticate(loginRequestDTO);
 
         if (token.isEmpty())

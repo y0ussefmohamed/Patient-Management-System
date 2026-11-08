@@ -1,0 +1,40 @@
+# Used by the course's LocalStack deployment when SPRING_PROFILES_ACTIVE=prod.
+server:
+  port: 8084
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Reach Patient Service through the host port published by LocalStack.
+        - id: patient-service-route
+          uri: http://host.docker.internal:8080
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - StripPrefix=1
+            - JwtValidation # Validate the JWT before forwarding the request.
+
+        - id: api-docs-patient-route
+          uri: http://host.docker.internal:8080
+          predicates:
+            - Path=/api-docs/patients
+          filters:
+            - RewritePath=/api-docs/patients,/v3/api-docs
+
+        # Reach Auth Service through the host port published by LocalStack.
+        - id: auth-service-route
+          uri: http://host.docker.internal:8083
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: api-docs-auth-route
+          uri: http://host.docker.internal:8083
+          predicates:
+            - Path=/api-docs/auth
+          filters:
+            - RewritePath=/api-docs/auth,/v3/api-docs

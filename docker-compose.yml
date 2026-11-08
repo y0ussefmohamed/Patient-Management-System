@@ -104,6 +104,13 @@ services:
       - "9001:9001"
     networks:
       - internal
+    healthcheck:
+      # Wait for the gRPC listener before starting Patient Service.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9001"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   patient-service:
     build:
@@ -121,11 +128,19 @@ services:
       patient-service-db:
         condition: service_healthy
       billing-service:
-        condition: service_started
+        condition: service_healthy
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     networks:
       - internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/v3/api-docs"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   analytics-service:
     build:
@@ -139,6 +154,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -159,6 +176,12 @@ services:
         condition: service_healthy
     networks:
       - internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8083/v3/api-docs"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   api-gateway:
     build:
@@ -171,9 +194,17 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8083
     depends_on:
       patient-service:
-        condition: service_started
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
     networks:
       - internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8084/api-docs/patients"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
 volumes:
   auth-db-data:
