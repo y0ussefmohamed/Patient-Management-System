@@ -148,7 +148,3 @@ bash Infrastructure/localstack-deploy.sh
 ```
 
 The script reads `JWT_SECRET` from the root `.env` file and prints the gateway URL. Use that URL in Postman in place of `http://localhost:8084`.
-
-## Acknowledgment
-
-Built while following [Chris Blakely's Spring Boot microservices course](https://www.youtube.com/watch?v=tseqdcFfTUY), with project-specific configuration and reliability improvements. [Instructor's source code](https://github.com/chrisblakely01/java-spring-microservices).
